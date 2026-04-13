@@ -21,7 +21,28 @@ export function attachWebSocketServer(server){
         maxPayload: 1024 *1024, //1mb
     })
 
-    wss.on('connection',(socket)=>{
+    wss.on('connection',async(socket,req)=>{
+         if (wsArcjet) {
+            try {
+    
+                const decision = await wsArcjet.protect(req);
+
+                if (decision.isDenied()) {
+                    if (decision.reason.isRateLimit()) {
+                        socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n');
+                    } else {
+                        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+                    }
+                    socket.destroy();
+                    return;
+                }
+            } catch (e) {
+                console.error('WS upgrade protection error', e);
+                socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+                socket.destroy();
+                return;
+            }
+        }
 
         socket.isAlive = true;
         socket.on('pong',()=>{socket.isAlive =true});
