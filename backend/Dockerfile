@@ -1,23 +1,20 @@
-# Use a slim Node.js image
+# This file should now live at backend/Dockerfile
 FROM node:18-slim
 
-# Set the working directory to the root
+# The working directory inside the container
 WORKDIR /app
 
-# Copy the backend package files first (for better caching)
-COPY backend/package*.json ./backend/
+# We are already in the 'backend' folder, so we copy files directly
+COPY package*.json ./
 
-# Install dependencies inside the backend folder
-RUN cd backend && npm install
+# Install dependencies
+RUN npm install
 
-# Copy the rest of the backend code
-COPY backend/ ./backend/
+# Copy the rest of the backend source code
+COPY . .
 
-# Move into the backend folder for the final execution
-WORKDIR /app/backend
-
-# Expose the port your Express app uses (Back4app needs this)
+# Match the port your app uses
 EXPOSE 8000
 
-# Start the application
+# Start your app
 CMD ["node", "src/index.js"]
